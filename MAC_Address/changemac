@@ -15,14 +15,19 @@ def get_args():
     parser.add_argument("-r", "--random", action="store_true",
                         help="Set fully random MAC")
     parser.add_argument("-s", "--show", action="store_true",
-                        help="Print the MAC Address and exit")
+                        help="Print the current MAC Address and exit")
+    parser.add_argument("-g", "--generate", action="store_true",
+                        help="To generate a MAC Address and exit")
     parsed_args = parser.parse_args()
     if not parsed_args.interface:
-        parser.error("[-] Please Specify an interface")
+        if parsed_args.generate:
+            pass
+        else:
+            parser.error("[-] Please Specify an interface")
     return parsed_args
 
 
-def generate_mac():
+def generate_mac():  # Generate a new mac address.
     hexdigits = []
     for x in range(6):
         a = random.randint(0, 255)
@@ -32,7 +37,7 @@ def generate_mac():
     return random_mac
 
 
-def change_mac(interface, new_mac):
+def change_mac(interface, new_mac):  # Change the mac address.
     print("[+] Changing MAC Address for " + interface + " to " + new_mac)
     print()
     subprocess.run(["ifconfig", interface, "down"])
@@ -40,7 +45,7 @@ def change_mac(interface, new_mac):
     subprocess.run(["ifconfig", interface, "up"])
 
 
-def get_mac(interface):
+def get_mac(interface):  # Get mac address by ifconfig command.
     ifconfig_result = subprocess.check_output(["ifconfig", interface])
     mac_result = re.search(r"\w\w:\w\w:\w\w:\w\w:\w\w:\w\w", ifconfig_result.decode())
     return mac_result.group(0)
@@ -48,22 +53,38 @@ def get_mac(interface):
 
 if __name__ == "__main__":
     options = get_args()
+
+    # if -i and -m is provided.
     if options.interface and options.new_mac:
-        change_mac(options.interface, options.new_mac)
-
-    elif options.interface and options.random:
-        global rand_mac
-        rand_mac = generate_mac()
-        change_mac(options.interface, rand_mac)
-
-    elif options.show and options.interface:
-        print("MAC Address: " + get_mac(options.interface))
-
-    if not options.show:
+        uni_address = re.search(r"11:\w\w:\w\w:\w\w:\w\w:\w\w", options.new_mac)  # if user provide unicode address
+        # then we get SIOCSIFHWADDR Error. To handle this we have to check the user input(mac address).
+        try:
+            if options.new_mac == uni_address.group(0):
+                print("Uni-cast Address are not allowed")
+                exit(0)
+        except AttributeError as msg:
+            change_mac(options.interface, options.new_mac)
         if get_mac(options.interface) == options.new_mac:
-            print("[+] MAC Address was successfully changed to: " + get_mac(options.interface))
-        elif rand_mac == get_mac(options.interface):
             print("[+] MAC Address was successfully changed to: " + get_mac(options.interface))
         else:
             print("[-] MAC Address did not get change.")
             exit(1)
+
+    # if -i and -r is provided.
+    elif options.interface and options.random:
+        rand_mac = generate_mac()
+        change_mac(options.interface, rand_mac)
+        if rand_mac == get_mac(options.interface):
+            print("[+] MAC Address was successfully changed to: " + get_mac(options.interface))
+        else:
+            print("[-] MAC Address did not get change.")
+            exit(1)
+
+    # is -i and -s is provided.
+    elif options.show and options.interface:
+        print("Current MAC Address of " + options.interface + " :- " + get_mac(options.interface))
+
+    # if -g is provided.
+    elif options.generate:
+        print("New MAC Address: " + generate_mac())
+        exit(0)
