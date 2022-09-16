@@ -1,0 +1,69 @@
+#!/usr/bin/enc python3
+
+import argparse
+import subprocess
+import random
+import re
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description="Welcome to MAC Changer for linux.")
+    parser.add_argument("-i", "--interface", dest="interface", type=str,
+                        help="Interface to change MAC Address")
+    parser.add_argument("-m", "--mac", dest="new_mac",
+                        help="Set new MAC Address XX:XX:XX:XX:XX:XX")
+    parser.add_argument("-r", "--random", action="store_true",
+                        help="Set fully random MAC")
+    parser.add_argument("-s", "--show", action="store_true",
+                        help="Print the MAC Address and exit")
+    parsed_args = parser.parse_args()
+    if not parsed_args.interface:
+        parser.error("[-] Please Specify an interface")
+    return parsed_args
+
+
+def generate_mac():
+    hexdigits = []
+    for x in range(6):
+        a = random.randint(0, 255)
+        hexadecimal = '%02x' % a
+        hexdigits.append(hexadecimal)
+    random_mac = (':'.join(hexdigits))
+    return random_mac
+
+
+def change_mac(interface, new_mac):
+    print("[+] Changing MAC Address for " + interface + " to " + new_mac)
+    print()
+    subprocess.run(["ifconfig", interface, "down"])
+    subprocess.run(["ifconfig", interface, "hw", "ether", new_mac])
+    subprocess.run(["ifconfig", interface, "up"])
+
+
+def get_mac(interface):
+    ifconfig_result = subprocess.check_output(["ifconfig", interface])
+    mac_result = re.search(r"\w\w:\w\w:\w\w:\w\w:\w\w:\w\w", ifconfig_result.decode())
+    return mac_result.group(0)
+
+
+if __name__ == "__main__":
+    options = get_args()
+    if options.interface and options.new_mac:
+        change_mac(options.interface, options.new_mac)
+
+    elif options.interface and options.random:
+        global rand_mac
+        rand_mac = generate_mac()
+        change_mac(options.interface, rand_mac)
+
+    elif options.show and options.interface:
+        print("MAC Address: " + get_mac(options.interface))
+
+    if not options.show:
+        if get_mac(options.interface) == options.new_mac:
+            print("[+] MAC Address was successfully changed to: " + get_mac(options.interface))
+        elif rand_mac == get_mac(options.interface):
+            print("[+] MAC Address was successfully changed to: " + get_mac(options.interface))
+        else:
+            print("[-] MAC Address did not get change.")
+            exit(1)
