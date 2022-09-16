@@ -56,11 +56,15 @@ if __name__ == "__main__":
 
     # if -i and -m is provided.
     if options.interface and options.new_mac:
-        uni_address = re.search(r"11:\w\w:\w\w:\w\w:\w\w:\w\w", options.new_mac)  # if user provide unicode address
-        # then we get SIOCSIFHWADDR Error. To handle this we have to check the user input(mac address).
+        mul_address = re.search(r"11:\w\w:\w\w:\w\w:\w\w:\w\w", options.new_mac)
+        brod_address = re.search(r"ff:\w\w:\w\w:\w\w:\w\w:\w\w", options.new_mac)  # user can only provide unicode
+        # address otherwise he gets SIOCSIFHWADDR Error. To handle this we have to check the user input(mac address).
         try:
-            if options.new_mac == uni_address.group(0):
-                print("Uni-cast Address are not allowed")
+            if options.new_mac == mul_address.group(0):
+                print("[-] Please use a Uni-cast MAC Address")
+                exit(0)
+            elif options.new_mac == brod_address.group(0):
+                print("[-] Please use a Uni-cast MAC Address")
                 exit(0)
         except AttributeError as msg:
             change_mac(options.interface, options.new_mac)
@@ -68,7 +72,7 @@ if __name__ == "__main__":
             print("[+] MAC Address was successfully changed to: " + get_mac(options.interface))
         else:
             print("[-] MAC Address did not get change.")
-            exit(1)
+            exit(0)
 
     # if -i and -r is provided.
     elif options.interface and options.random:
@@ -78,9 +82,9 @@ if __name__ == "__main__":
             print("[+] MAC Address was successfully changed to: " + get_mac(options.interface))
         else:
             print("[-] MAC Address did not get change.")
-            exit(1)
+            exit(0)
 
-    # is -i and -s is provided.
+    # if -i and -s is provided.
     elif options.show and options.interface:
         print("Current MAC Address of " + options.interface + " :- " + get_mac(options.interface))
 
