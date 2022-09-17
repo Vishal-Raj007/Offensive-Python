@@ -3,6 +3,8 @@
 
 changemac is a script written in Python3
 
+![](https://github.com/Vishal-Raj007/Offensive-Python/blob/master/MAC_Address/changemac.jpg)
+
 ## Deployment
 
 To deploy this project run
@@ -24,7 +26,11 @@ To deploy this project run
     -r, --random                Set fully random MAC
     -s, --show                  Print the MAC Address and exit
 ```
+### Set custom MAC
+`sudo changemac -i eth0 -m xx:xx:xx:xx:xx:xx`
 
+### Set random MAC
+`sudo changemac -i eth0 -r`
 
 ## Authors
 
