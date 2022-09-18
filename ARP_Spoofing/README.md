@@ -7,6 +7,11 @@ The arp_spoof.py tool sends 2 ARP response packet on your local machine.
 One to the gateway and one to the victime. 
 Basically telling victim machine that he is default gateway. And at the other side telling your default gateway that he is targeted machine.
 In this script I'm using scapy module for creating packets(ARP, Ethernet). I tried to add as much comments as I can so that it's make easy to understand.
+
+## Screenshot
+
+![](https://github.com/Vishal-Raj007/Offensive-Python/blob/master/ARP_Spoofing/arp_spoof.jpg)
+
 #### arp_spoof.py takes two user input:
 `1. Target IP Address`
 
